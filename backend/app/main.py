@@ -1,0 +1,21 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from app.api.endpoints import router as api_router
+from pydantic import BaseModel
+
+app = FastAPI(title="AI Bias Audit API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(api_router)
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the AI Bias Audit API"}
