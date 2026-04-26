@@ -20,7 +20,7 @@ const Sidebar = () => {
     <div className="w-64 h-screen bg-slate-900 border-r border-slate-700 fixed left-0 top-0 text-slate-300 flex flex-col">
       <div className="p-6 text-xl font-bold text-white flex items-center gap-2 border-b border-slate-700">
         <Shield className="text-blue-500" />
-        AI Bias Audit
+        FairLens
       </div>
       <div className="flex-1 overflow-y-auto py-4">
         {links.map((link) => {

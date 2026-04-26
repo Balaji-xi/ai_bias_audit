@@ -18,7 +18,7 @@ const BiasMitigation = () => {
 
     try {
       const res = await axios.post('http://localhost:8000/api/mitigate-bias', {
-        dataset_id: dataset.id,
+        dataset_id: dataset.dataset_id,
         target_col: dataset.target,
         sensitive_col: sensitiveCol,
         model_type: 'rf'
@@ -26,14 +26,14 @@ const BiasMitigation = () => {
       
       // Auto-re-detect bias to get new metrics
       const newBiasRes = await axios.post('http://localhost:8000/api/detect-bias', {
-        dataset_id: dataset.id,
+        dataset_id: dataset.dataset_id,
         target_col: dataset.target,
         sensitive_cols: Object.keys(biasMetrics)
       });
 
       setMitigatedMetrics({
-        accuracy: res.data.accuracy,
-        biasMetrics: newBiasRes.data
+        accuracy: res.data.accuracy_after_mitigation,
+        biasMetrics: newBiasRes.data.bias_results
       });
       navigate('/compare');
     } catch (err) {

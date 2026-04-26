@@ -1,20 +1,38 @@
 import { useState } from 'react';
+import axios from 'axios';
 import { Download, FileText } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 const Reports = () => {
-  const { dataset, biasMetrics, mitigatedMetrics } = useAppContext();
+  const { dataset, modelData, biasMetrics, mitigatedMetrics } = useAppContext();
   const [loading, setLoading] = useState(false);
 
-  const handleDownload = () => {
-    // A real implementation would post current session context to API,
-    // which generates the PDF and returns it as a blob. 
-    // Here we use a stylized UI placeholder.
+  const handleDownload = async () => {
     setLoading(true);
-    setTimeout(() => {
-        setLoading(false);
-        alert('Report downloaded successfully (Simulation)');
-    }, 1500);
+    try {
+      const res = await axios.post('http://localhost:8000/api/generate-report', {
+        dataset: dataset || {},
+        modelData: modelData || {},
+        biasMetrics: biasMetrics || {},
+        mitigatedMetrics: mitigatedMetrics || {}
+      }, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'FairLens_Audit_Report.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate report');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
