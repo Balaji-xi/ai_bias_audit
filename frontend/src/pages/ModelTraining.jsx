@@ -89,6 +89,9 @@ const ModelTraining = () => {
               >
                 <option value="rf">Random Forest</option>
                 <option value="lr">Logistic Regression</option>
+                <option value="dt">Decision Tree</option>
+                <option value="gb">Gradient Boosting</option>
+                <option value="svm">Support Vector Machine</option>
               </select>
             </div>
 

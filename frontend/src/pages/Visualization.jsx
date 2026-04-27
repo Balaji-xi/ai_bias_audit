@@ -27,7 +27,7 @@ const Visualization = () => {
 
       <div className="bg-slate-800 rounded-xl p-8 border border-slate-700 mb-8 h-[500px]">
         <h2 className="text-xl font-bold mb-6">Selection Rate by Group (%)</h2>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={400}>
           <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis dataKey="name" stroke="#94a3b8" />

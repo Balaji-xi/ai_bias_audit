@@ -3,8 +3,10 @@ from io import StringIO
 import uuid
 import os
 
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 from fairlearn.metrics import MetricFrame, selection_rate, demographic_parity_difference, equalized_odds_difference
@@ -14,6 +16,7 @@ class MLService:
     def __init__(self):
         self.data_store = {}
         self.models = {}
+        self.mitigators = {}
         self.predictions = {}
         self.encoders = {}
         self.clean_data = {}  # 🔥 store cleaned dataset
@@ -77,6 +80,12 @@ class MLService:
 
         if model_type == 'rf':
             model = RandomForestClassifier(n_estimators=100, random_state=42)
+        elif model_type == 'dt':
+            model = DecisionTreeClassifier(random_state=42)
+        elif model_type == 'gb':
+            model = GradientBoostingClassifier(random_state=42)
+        elif model_type == 'svm':
+            model = SVC(random_state=42, probability=True)
         else:
             model = LogisticRegression(random_state=42, max_iter=5000)
 
@@ -272,6 +281,12 @@ class MLService:
 
         if model_type == 'rf':
             base_model = RandomForestClassifier(n_estimators=100, random_state=42)
+        elif model_type == 'dt':
+            base_model = DecisionTreeClassifier(random_state=42)
+        elif model_type == 'gb':
+            base_model = GradientBoostingClassifier(random_state=42)
+        elif model_type == 'svm':
+            base_model = SVC(random_state=42, probability=True)
         else:
             base_model = LogisticRegression(random_state=42, max_iter=5000)
 
@@ -281,6 +296,7 @@ class MLService:
         )
 
         mitigator.fit(X, y, sensitive_features=A)
+        self.mitigators[dataset_id] = mitigator
         preds = mitigator.predict(X)
 
         self.predictions[dataset_id] = preds
@@ -292,5 +308,69 @@ class MLService:
             "accuracy_after_mitigation": float(acc)
         }
 
+    # -----------------------------
+    # PREDICT NEW DATA
+    # -----------------------------
+    def predict_new(self, dataset_id: str, input_features: dict, use_mitigated: bool = False):
+        df_clean = self.clean_data.get(dataset_id)
+        if df_clean is None:
+            raise ValueError("Dataset not found or model not trained")
+            
+        # Try to infer target col
+        target_col = None
+        for col in self.encoders.get(dataset_id, {}):
+            if col in df_clean.columns and col not in input_features:
+                 target_col = col
+
+        if target_col is None:
+            diff = list(set(df_clean.columns) - set(input_features.keys()))
+            if diff:
+                target_col = diff[0]
+            else:
+                target_col = df_clean.columns[-1]
+
+        # Convert input to DataFrame
+        df_input = pd.DataFrame([input_features])
+        
+        # apply encoders
+        encoders = self.encoders.get(dataset_id, {})
+        
+        # for safely handling unseen categories
+        for col in df_input.select_dtypes(include=['object']).columns:
+            if col in encoders:
+                # We need to map string to integer based on existing LabelEncoder
+                le = encoders[col]
+                mapped = []
+                for val in df_input[col]:
+                    if val in le.classes_:
+                        mapped.append(le.transform([val])[0])
+                    else:
+                        mapped.append(0) # Default if unseen
+                df_input[col] = mapped
+
+        # ensure column order matches X
+        expected_cols = [c for c in df_clean.columns if c != target_col]
+        for c in expected_cols:
+            if c not in df_input.columns:
+                df_input[c] = 0
+        df_input = df_input[expected_cols]
+
+        model = self.mitigators.get(dataset_id) if use_mitigated else self.models.get(dataset_id)
+        if model is None:
+            raise ValueError("Requested model is not available. Please train/mitigate first.")
+
+        pred = model.predict(df_input)[0]
+
+        # inverse transform if target is encoded
+        if target_col in encoders:
+            try:
+                pred = encoders[target_col].inverse_transform([pred])[0]
+            except Exception:
+                pass
+
+        return {
+            "success": True,
+            "prediction": str(pred)
+        }
 
 ml_service = MLService()

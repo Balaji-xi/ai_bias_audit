@@ -13,6 +13,7 @@ const Sidebar = () => {
     { to: '/visualize', icon: BarChart2, label: 'Visualization' },
     { to: '/mitigate', icon: ShieldCheck, label: 'Bias Mitigation' },
     { to: '/compare', icon: Shield, label: 'Comparison' },
+    { to: '/prediction', icon: Activity, label: 'Prediction' },
     { to: '/reports', icon: FileText, label: 'Reports' },
   ];
 

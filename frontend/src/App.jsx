@@ -10,6 +10,7 @@ import Visualization from './pages/Visualization';
 import BiasMitigation from './pages/BiasMitigation';
 import Comparison from './pages/Comparison';
 import Reports from './pages/Reports';
+import Prediction from './pages/Prediction';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/visualize" element={<Visualization />} />
             <Route path="/mitigate" element={<BiasMitigation />} />
             <Route path="/compare" element={<Comparison />} />
+            <Route path="/prediction" element={<Prediction />} />
             <Route path="/reports" element={<Reports />} />
           </Routes>
         </Layout>

@@ -6,3 +6,5 @@ fairlearn
 python-multipart
 fpdf2
 pytest
+matplotlib
+seaborn
